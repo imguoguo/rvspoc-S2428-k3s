@@ -78,10 +78,48 @@ build/boards/cv181x/sg2000_milkv_duos_glibc_arm64_sd/linux/cvitek_sg2000_milkv_d
      # ION after FreeRTOS
 ```
 
-同时，由于Fedora本身的大小超过了DuoS原有分区容量，我们需要修改分区大小 build/boards/cv181x/sg2000_milkv_duos_glibc_arm64_sd/partition/partition_sd.xml
+同时，由于Fedora本身的大小超过了DuoS原有分区容量，我们需要修改分区大小 device/milkv-duos-glibc-arm64-sd/genimage.cfg
 
 ```bash
-<partition label="ROOTFS" size_in_mb="4096" readonly="false" file="rootfs.sd" />
+image boot.vfat {
+	vfat {
+		label = "boot"
+		files = {
+			"fip.bin",
+			"rawimages/boot.sd",
+		}
+	}
+	size = 128M
+}
+
+image rootfs.ext4 {
+	ext4 {
+		label = "rootfs"
+		use-mke2fs = true
+	}
+	size = 2G
+}
+
+image milkv-duos-glibc-arm64-sd.img {
+	hdimage {
+	}
+
+	partition boot {
+		partition-type = 0xC
+		bootable = "true"
+		image = "boot.vfat"
+	}
+
+	partition logo {
+		image = "logo.jpg"
+		size = 2M
+	}
+
+	partition rootfs {
+		partition-type = 0x83
+		image = "rootfs.ext4"
+	}
+}
 ```
 
 以上对文件的修改均已放入仓库中 arch/arm 目录下。

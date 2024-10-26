@@ -57,6 +57,25 @@ git clone https://github.com/milkv-duo/duo-buildroot-sdk --depth=1
      # ION after FreeRTOS
 ```
 
+修改分区大小 device/milkv-duos-sd/genimage.cfg
+
+```
+diff --git a/device/milkv-duos-sd/genimage.cfg b/device/milkv-duos-sd/genimage.cfg
+index 55e9dbe72..c164704d3 100644
+--- a/device/milkv-duos-sd/genimage.cfg
++++ b/device/milkv-duos-sd/genimage.cfg
+@@ -13,7 +13,7 @@ image rootfs.ext4 {
+        ext4 {
+                label = "rootfs"
+        }
+-       size = 768M
++       size = 2G
+ }
+
+ image milkv-duos-sd.img {
+```
+
+
 编译针对 milkv-duos-sd 的镜像
 
 ```bash
@@ -81,22 +100,22 @@ git clone https://github.com/milkv-duo/duo-buildroot-sdk --depth=1
 mkdir -p rootfs
 
 LOOP_DEVICE=$(losetup -f)
-sudo losetup -fP milkv-duos-sd-20240807-1716.img
+sudo losetup -P $LOOP_DEVICE milkv-duos-sd-20240807-1716.img
 
 # 检查挂载位置，未挂载loop情况下，新镜像挂载后会位于 /dev/loop0
 lsblk
 
 # 不重新格式化，可能会出现 the backing extfs filesystem is formatted without d_type support 的提示
-sudo mkfs.ext4 -f "/dev/${LOOP_DEVICE}p3"
+sudo mkfs.ext4 -F "${LOOP_DEVICE}p3"
 
-sudo mount "/dev/${LOOP_DEVICE}p3" rootfs
+sudo mount "${LOOP_DEVICE}p3" rootfs
 
 # 切换到rootfs目录删除掉所有原有的内容
 pushd rootfs
 sudo tar -xvf ~/archriscv-latest.tar.zst .
 
 # 复制内核内容
-sudo cp -r ../../linux_5.10/build/cv1813h_milkv_duos_sd/modules/lib/modules/5.10.4-tag- /lib/modules/
+sudo cp -r ../../linux_5.10/build/cv1813h_milkv_duos_sd/modules/lib/modules/5.10.4-tag- ./lib/modules/
 popd
 
 ```
